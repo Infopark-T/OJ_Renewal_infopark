@@ -1,17 +1,35 @@
 #!/bin/bash
 # ================================================================
-# HustOJ 서버 최초 설치 스크립트 (Ubuntu 24.04 LTS 기준)
+# HustOJ 서버 최초 설치 스크립트 (Ubuntu 24.04 LTS)
 # 사용법: sudo bash server-setup.sh
 # ================================================================
 set -e
 
 REPO_URL="https://github.com/Infopark-T/OJ_Renewal_GSGHINFO.git"
-DOMAIN="your.domain.com"   # ← 도메인 수정 후 실행
 APP_DIR="/opt/hustoj"
 
+# ── 도메인 / IP 설정 ─────────────────────────────────────────────
+PUBLIC_IP=$(curl -sf --max-time 5 https://api.ipify.org || hostname -I | awk '{print $1}')
+
+echo ""
+echo "서버 공인 IP: $PUBLIC_IP"
+echo ""
+read -rp "도메인이 있으면 입력하세요 (없으면 엔터 → IP로 접속): " DOMAIN
+if [ -z "$DOMAIN" ]; then
+    DOMAIN="$PUBLIC_IP"
+    USE_SSL=false
+    echo "→ IP($PUBLIC_IP) 기반으로 설정합니다. (SSL 없음)"
+else
+    USE_SSL=true
+    echo "→ 도메인($DOMAIN) 기반으로 설정합니다."
+fi
+echo ""
+
+# ─────────────────────────────────────────────────────────────────
+
 echo "=== [1/6] 시스템 패키지 업데이트 ==="
-apt-get update && apt-get upgrade -y
-apt-get install -y git curl openssl
+apt-get update -q && apt-get upgrade -y -q
+apt-get install -y -q git curl openssl
 
 echo "=== [2/6] Docker 설치 ==="
 if ! command -v docker &> /dev/null; then
@@ -22,23 +40,20 @@ else
     echo "Docker 이미 설치됨 ($(docker --version))"
 fi
 
-# Docker Compose V2 확인
 if ! docker compose version &> /dev/null; then
     apt-get install -y docker-compose-plugin
 fi
-echo "Docker Compose: $(docker compose version)"
 
-echo "=== [3/6] Nginx + Certbot 설치 ==="
-apt-get install -y nginx snapd
+echo "=== [3/6] Nginx 설치 ==="
+apt-get install -y -q nginx snapd
 systemctl enable nginx && systemctl start nginx
 
-# Ubuntu 24.04: Certbot은 snap으로 설치
-if ! command -v certbot &> /dev/null; then
-    snap install core && snap refresh core
-    snap install --classic certbot
-    ln -sf /snap/bin/certbot /usr/bin/certbot
-else
-    echo "Certbot 이미 설치됨"
+if [ "$USE_SSL" = true ]; then
+    if ! command -v certbot &> /dev/null; then
+        snap install core && snap refresh core
+        snap install --classic certbot
+        ln -sf /snap/bin/certbot /usr/bin/certbot
+    fi
 fi
 
 echo "=== [4/6] 코드 클론 ==="
@@ -60,7 +75,7 @@ MYSQL_PASSWORD=$DB_PASS
 SECRET_KEY=$SECRET
 EOF
     echo ""
-    echo "  [!] .env 자동 생성됨 — 아래 정보를 안전한 곳에 보관하세요"
+    echo "  [!] .env 자동 생성 — 아래 정보를 안전한 곳에 보관하세요"
     echo "      DB 패스워드 : $DB_PASS"
     echo "      DB Root PW  : $DB_ROOT"
     echo ""
@@ -86,11 +101,11 @@ server {
 }
 EOF
 
-# default 사이트 비활성화
 rm -f /etc/nginx/sites-enabled/default
 ln -sf /etc/nginx/sites-available/hustoj /etc/nginx/sites-enabled/hustoj
 nginx -t && systemctl reload nginx
 
+# ── 완료 메시지 ───────────────────────────────────────────────────
 echo ""
 echo "=============================================="
 echo " 설치 완료! 이후 순서:"
@@ -102,6 +117,13 @@ echo ""
 echo "  2. Piston 런타임 설치 (최초 1회, 컨테이너 뜬 후)"
 echo "     bash $APP_DIR/piston-setup.sh"
 echo ""
+if [ "$USE_SSL" = true ]; then
 echo "  3. SSL 인증서 발급 (DNS가 이 서버를 가리킨 후)"
 echo "     certbot --nginx -d $DOMAIN"
+echo ""
+echo "  접속 주소: https://$DOMAIN"
+else
+echo "  접속 주소: http://$PUBLIC_IP"
+echo "  (도메인 연결 후 certbot --nginx -d 도메인 으로 SSL 추가 가능)"
+fi
 echo "=============================================="
