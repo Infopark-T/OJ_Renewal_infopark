@@ -13,7 +13,7 @@
 서버에 SSH 접속 후 아래 명령어 한 줄 실행:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/Infopark-T/OJ_Renewal_GSGHINFO/main/server-setup.sh)
+curl -fsSL https://raw.githubusercontent.com/Infopark-T/OJ_Renewal_GSGHINFO/main/server-setup.sh -o /tmp/setup.sh && sudo bash /tmp/setup.sh
 ```
 
 실행 중 도메인 입력을 물어봅니다.
