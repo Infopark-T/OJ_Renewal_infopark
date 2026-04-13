@@ -5,7 +5,7 @@
 # ================================================================
 set -e
 
-REPO_URL="https://github.com/YOUR_USERNAME/YOUR_REPO.git"   # ← 수정
+REPO_URL="https://github.com/Infopark-T/OJ_Renewal_GSGHINFO.git"
 DOMAIN="your.domain.com"                                      # ← 수정
 APP_DIR="/opt/hustoj"
 
