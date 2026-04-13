@@ -304,7 +304,7 @@ export default function MyPage() {
                           {p.source && (
                             <span className="text-xs text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded truncate max-w-[100px]">{p.source}</span>
                           )}
-                          {p.difficulty != null && <DifficultyBadge difficulty={p.difficulty} />}
+                          {p.difficulty != null && <DifficultyBadge level={p.difficulty} />}
                         </div>
                       </Link>
                     ))}

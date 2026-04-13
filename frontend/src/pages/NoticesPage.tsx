@@ -82,7 +82,7 @@ function NoticeCard({
   onEdit,
 }: {
   notice: any
-  canEdit: boolean
+  canEdit: boolean | undefined
   onEdit: (n: any) => void
 }) {
   const [expanded, setExpanded] = useState(false)
