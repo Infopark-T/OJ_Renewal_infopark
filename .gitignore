@@ -23,3 +23,6 @@ data/
 # 문제 XML 데이터 (로컬 전용)
 "(26.03.16)CSLHUSTOJ260131XML/"
 *.xml
+
+# NAS (서버별 로컬 설정)
+docker-compose.nextcloud.yml
